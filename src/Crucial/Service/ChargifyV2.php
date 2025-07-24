@@ -204,7 +204,7 @@ class ChargifyV2
         }
 
         if (!empty($rawData)) {
-            $options['body'] = Psr7\stream_for($rawData);
+            $options['body'] = $this->createStream($rawData);
         }
 
         try {
@@ -248,5 +248,20 @@ class ChargifyV2
     public function call()
     {
         return new Call($this);
+    }
+
+    protected function createStream($body)
+    {
+        if (function_exists('\GuzzleHttp\Psr7\stream_for')) {
+            // Compatible con Psr7 v1
+            return \GuzzleHttp\Psr7\stream_for($body);
+        }
+
+        if (class_exists('\GuzzleHttp\Psr7\Utils')) {
+            // Compatible con Psr7 v2
+            return \GuzzleHttp\Psr7\Utils::streamFor($body);
+        }
+
+        throw new \RuntimeException('No stream_for or Utils::streamFor available. Please check guzzlehttp/psr7 version.');
     }
 }
